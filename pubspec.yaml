@@ -1,7 +1,7 @@
-name: searchable_dropdown
-description: "A new Flutter package project."
+name: advanced_searchable_dropdown
+description: "A customizable Flutter dropdown with search functionality. This widget allows users to filter items in a dropdown based on user input and select the desired item. It's ideal for situations where the list of items can be long, and you need to quickly search for an item."
 version: 0.0.1
-homepage:
+homepage: https://github.com/Rijankunwar3691/searchable_dropdown
 
 environment:
   sdk: '>=3.3.4 <4.0.0'

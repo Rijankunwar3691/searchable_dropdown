@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:searchable_dropdown/src/model/search_dropdown.dart';
+import 'package:advanced_searchable_dropdown/src/model/search_dropdown.dart';
 
 class SearchableDropDown extends StatefulWidget {
   const SearchableDropDown({
