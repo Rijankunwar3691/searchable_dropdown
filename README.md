@@ -1,4 +1,4 @@
-# `searchable_dropdown`
+# `advanced_searchable_dropdown`
 
 A customizable Flutter dropdown with search functionality. This widget allows users to filter items in a dropdown based on user input and select the desired item. It's ideal for situations where the list of items can be long, and you need to quickly search for an item.
 
@@ -13,16 +13,17 @@ A customizable Flutter dropdown with search functionality. This widget allows us
 
 ## Installation
 
-Add `searchable_dropdown` as a dependency in your `pubspec.yaml` file:
+Add `advanced_searchable_dropdown` as a dependency in your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  searchable_dropdown: ^1.0.0
+  advanced_searchable_dropdown: ^0.0.2
 ```
 
 Then run the following command to install the package:
 
 ```bash
+flutter pub add advanced_searchable_dropdown
 flutter pub get
 ```
 
@@ -32,8 +33,8 @@ flutter pub get
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:searchable_dropdown/searchable_dropdown.dart';
-import 'package:searchable_dropdown/src/model/search_dropdown.dart';
+import 'package:advanced_searchable_dropdown/advanced_searchable_dropdown.dart';
+
 
 void main() {
   runApp(MyApp());
