@@ -5,6 +5,9 @@ Here’s a suggested changelog for your package:
 ## Changelog
 
 ### [0.0.4] - 2025-04-28
+- `menuTextStyle` bug fix.
+
+### [0.0.4] - 2025-04-28
 - Added `menuMaxHeight` to set the maximum height of the dropdown menu.
 - Introduced `onTapCancel` callback to allow custom behavior when the dropdown is canceled or closed.
 - Added `hoverColor` for controlling the hover effect on dropdown items.
