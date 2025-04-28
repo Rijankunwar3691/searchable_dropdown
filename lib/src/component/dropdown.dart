@@ -1,7 +1,6 @@
 import 'package:advanced_searchable_dropdown/advanced_searchable_dropdown.dart';
 import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space.dart';
 import 'package:flutter/material.dart';
-import 'package:advanced_searchable_dropdown/src/model/search_dropdown.dart';
 import 'package:flutter/services.dart';
 
 class SearchableDropDown extends StatefulWidget {
@@ -167,6 +166,20 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
   // Builds each menu item in the dropdown
   Widget _buildMenuItem(int index, bool isHovered) {
+    TextStyle textStyle = widget.menuTextStyle?.copyWith(
+          color:
+              widget.value != null && widget.value == filteredData[index].value
+                  ? widget.selectedColor // Use selectedColor if set
+                  : widget.textStyle?.color ??
+                      Colors.black, // Default to black if no color set) ??
+        ) ??
+        TextStyle(
+          color:
+              widget.value != null && widget.value == filteredData[index].value
+                  ? widget.selectedColor // Use selectedColor if set
+                  : widget.textStyle?.color ??
+                      Colors.black, // Default to black if no color set
+        );
     return Container(
       color: isHovered
           ? Theme.of(context).highlightColor
@@ -177,13 +190,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           enabled: filteredData[index].value != -1, // Disable if value is -1
           title: Text(
             filteredData[index].label, // Display the item label
-            style: widget.menuTextStyle?.copyWith(
-              color: widget.value != null &&
-                      widget.value == filteredData[index].value
-                  ? widget.selectedColor // Use selectedColor if set
-                  : widget.textStyle?.color ??
-                      Colors.black, // Default to black if no color set) ??
-            ),
+            style: textStyle,
           ),
           onTap: () {
             _onTapTile(filteredData[index]); // Handle item tap
