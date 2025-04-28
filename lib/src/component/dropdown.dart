@@ -1,3 +1,4 @@
+import 'package:advanced_searchable_dropdown/advanced_searchable_dropdown.dart';
 import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space.dart';
 import 'package:flutter/material.dart';
 import 'package:advanced_searchable_dropdown/src/model/search_dropdown.dart';
@@ -29,6 +30,7 @@ class SearchableDropDown extends StatefulWidget {
     this.decoration,
     this.expands = false,
     this.selectedColor = Colors.blue,
+    this.menuAlignment,
   });
 
   final double? menuMaxHeight;
@@ -54,6 +56,7 @@ class SearchableDropDown extends StatefulWidget {
   final InputDecoration? decoration;
   final bool expands;
   final Color selectedColor;
+  final MenuAlignment? menuAlignment;
 
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
@@ -118,6 +121,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     final menuMaxHeight = widget.menuMaxHeight ?? (filteredData.length * 42);
 
     final requiredOffset = calculateAvailableSpace(
+        menuAlignment: widget.menuAlignment,
         offset: offset,
         size: size,
         context: context,

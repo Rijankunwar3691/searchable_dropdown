@@ -1,0 +1,4 @@
+enum MenuAlignment {
+  top,
+  bottom,
+}
