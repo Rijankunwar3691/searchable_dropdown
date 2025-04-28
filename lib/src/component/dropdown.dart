@@ -52,6 +52,7 @@ class SearchableDropDown extends StatefulWidget {
     this.expands = false,
     this.selectedColor = Colors.blue,
     this.menuAlignment,
+    this.autoFocus,
   });
 
   /// The maximum height of the dropdown menu.
@@ -131,6 +132,9 @@ class SearchableDropDown extends StatefulWidget {
   /// Alignment of the dropdown menu relative to the input field.
   final MenuAlignment? menuAlignment;
 
+  /// auto focus for the testfield
+  final bool? autoFocus;
+
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
 }
@@ -147,6 +151,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
+    _focusNode.onKeyEvent = _handleKey;
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
     _setInitialValue(); // Set the initial value for the dropdown (if any)
@@ -331,9 +336,10 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   }
 
   // Handles keyboard events like arrow up, arrow down, and enter keys
-  void _handleKey(KeyEvent event) {
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (_overlayEntry == null) {
-      return; // No overlay to handle keys if it's not present
+      return KeyEventResult
+          .ignored; // No overlay to handle keys if it's not present
     }
 
     if (event is KeyDownEvent) {
@@ -344,6 +350,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         });
         _scrollToHoveredItem();
         _overlayEntry?.markNeedsBuild();
+        return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         setState(() {
           _hoveredIndex = (_hoveredIndex - 1 + filteredData.length) %
@@ -351,14 +358,17 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         });
         _scrollToHoveredItem();
         _overlayEntry?.markNeedsBuild();
+        return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.enter) {
         if (filteredData.isNotEmpty) {
           final selected =
               filteredData[_hoveredIndex]; // Get the currently hovered item
           _onTapTile(selected); // Select the hovered item
+          return KeyEventResult.handled;
         }
       }
     }
+    return KeyEventResult.ignored;
   }
 
   /// Called when a menu item is tapped.
@@ -388,16 +398,13 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _layerLink,
-      child: KeyboardListener(
-        focusNode: FocusNode(), // New focus node for keyboard events
-        onKeyEvent: _handleKey,
-        child: _buildTextField(context),
-      ),
+      child: _buildTextField(context),
     );
   }
 
   TextFormField _buildTextField(BuildContext context) {
     return TextFormField(
+      autofocus: widget.autoFocus ?? false,
       textAlign: TextAlign.start,
       expands: widget.expands,
       maxLines: widget.maxLines,

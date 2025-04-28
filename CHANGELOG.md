@@ -4,6 +4,10 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.0.6] - 2025-04-28
+- auto focus added.
+- Focus on field optimized.
+
 ### [1.0.5] - 2025-04-28
 - auto relocate menu.
 
