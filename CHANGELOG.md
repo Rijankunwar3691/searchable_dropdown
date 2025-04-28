@@ -3,6 +3,11 @@ Here’s a suggested changelog for your package:
 ---
 
 ## Changelog
+
+### [1.0.2] - 2025-04-28
+- scroll on keypress.
+- adjust menu height dynamically.
+
 ### [1.0.1] - 2025-04-28
 - screenshot added.
 
