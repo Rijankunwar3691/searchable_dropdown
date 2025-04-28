@@ -365,6 +365,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
               filteredData[_hoveredIndex]; // Get the currently hovered item
           _onTapTile(selected); // Select the hovered item
           return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.space) {
+          _showOverlay();
+          return KeyEventResult.handled;
         }
       }
     }
@@ -444,6 +447,12 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         _showOverlay();
       },
       onChanged: (value) {
+        if (value != _textController.text.trimLeft()) {
+          _textController.text = value.trim();
+
+          _textController.selection =
+              TextSelection.collapsed(offset: _textController.text.length);
+        }
         widget.onSearch != null ? widget.onSearch!(value) : _filterItems(value);
       },
     );
