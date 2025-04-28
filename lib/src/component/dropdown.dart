@@ -52,7 +52,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   void initState() {
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
-    setInitalValue();
+    _setInitialValue();
     super.initState();
   }
 
@@ -146,22 +146,28 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     );
   }
 
-  void setInitalValue() {
+  void _setInitialValue() {
     if (widget.value != null) {
-      final int selectedIndex = widget.menuList.indexWhere(
-        (element) => element.value == widget.value,
-      );
-      if (selectedIndex != -1) {
-        final selectedValue = widget.menuList[selectedIndex];
-        _textController.text = selectedValue.label;
+      final selectedItem = _getSelectedItem();
+      if (selectedItem != null) {
+        _textController.text = selectedItem.label;
       } else {
         _textController.clear();
-        assert(selectedIndex != -1,
-            "Menu must contain at least one or more value");
+        assert(false, "Menu must contain at least one or more value");
       }
     } else {
       _textController.clear();
     }
+  }
+
+  SearchableDropDownItem? _getSelectedItem() {
+    final selectedIndex = widget.menuList.indexWhere(
+      (element) => element.value == widget.value,
+    );
+    if (selectedIndex != -1) {
+      return widget.menuList[selectedIndex];
+    }
+    return null;
   }
 
   void _filterItems(String query) {
@@ -222,7 +228,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         onKeyEvent: _handleKey,
         child: TextField(
           onTapOutside: (event) {
-            setInitalValue();
+            _setInitialValue();
             FocusManager.instance.primaryFocus?.unfocus();
           },
           controller: _textController,
