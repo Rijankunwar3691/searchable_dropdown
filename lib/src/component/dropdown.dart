@@ -1,3 +1,4 @@
+import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space.dart';
 import 'package:flutter/material.dart';
 import 'package:advanced_searchable_dropdown/src/model/search_dropdown.dart';
 import 'package:flutter/services.dart';
@@ -114,16 +115,22 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     var size = renderBox.size;
     var offset = renderBox.localToGlobal(Offset.zero);
 
+    final menuMaxHeight = widget.menuMaxHeight ?? (filteredData.length * 42);
+
+    final requiredOffset = calculateAvailableSpace(
+        offset: offset,
+        size: size,
+        context: context,
+        menuHeight: menuMaxHeight);
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         height: widget.menuMaxHeight,
         width: size.width,
-        top: offset.dy + size.height,
         left: offset.dx,
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
-          offset: Offset(0, size.height + 5),
+          offset: requiredOffset,
           child: Material(
             elevation: 4,
             shape: widget.menuShape ??
@@ -158,21 +165,24 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       color: isHovered
           ? Theme.of(context).highlightColor
           : Colors.transparent, // Highlight hovered item
-      child: ListTile(
-        enabled: filteredData[index].value != -1, // Disable if value is -1
-        title: Text(
-          filteredData[index].label, // Display the item label
-          style: widget.menuTextStyle?.copyWith(
-            color: widget.value != null &&
-                    widget.value == filteredData[index].value
-                ? widget.selectedColor // Use selectedColor if set
-                : widget.textStyle?.color ??
-                    Colors.black, // Default to black if no color set) ??
+      child: SizedBox(
+        height: 40,
+        child: ListTile(
+          enabled: filteredData[index].value != -1, // Disable if value is -1
+          title: Text(
+            filteredData[index].label, // Display the item label
+            style: widget.menuTextStyle?.copyWith(
+              color: widget.value != null &&
+                      widget.value == filteredData[index].value
+                  ? widget.selectedColor // Use selectedColor if set
+                  : widget.textStyle?.color ??
+                      Colors.black, // Default to black if no color set) ??
+            ),
           ),
+          onTap: () {
+            _onTapTile(filteredData[index]); // Handle item tap
+          },
         ),
-        onTap: () {
-          _onTapTile(filteredData[index]); // Handle item tap
-        },
       ),
     );
   }
