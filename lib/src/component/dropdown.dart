@@ -52,7 +52,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   void initState() {
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
-    _setInitialValue();
+    _setInitialValue(); // Set the initial value for the dropdown (if any)
     super.initState();
   }
 
@@ -65,6 +65,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     super.dispose();
   }
 
+  /// Listener that removes the overlay when focus is lost
+  ///  Delay added so that the onTap function of tile can be called.
   void onFocusChange() {
     if (!_focusNode.hasFocus) {
       Future.delayed(const Duration(milliseconds: 220), () {
@@ -75,15 +77,18 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     }
   }
 
+  // Displays the overlay with the filtered items
   void _showOverlay() {
-    _overlayEntry?.remove();
-    _createOverlayEntry();
-    Overlay.of(context).insert(_overlayEntry!);
+    _overlayEntry?.remove(); // Remove any existing overlay
+    _createOverlayEntry(); // Create a new overlay entry
+    Overlay.of(context)
+        .insert(_overlayEntry!); // Insert the overlay into the context
   }
 
+  // Removes the overlay from the screen
   void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    _overlayEntry?.remove(); // Remove the overlay
+    _overlayEntry = null; // Clear the overlay entry reference
   }
 
   void _createOverlayEntry() {
@@ -107,7 +112,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
                 RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
-            color: widget.menuColor,
+            color:
+                widget.menuColor, // Set the background color for the dropdown
             child: Container(
               decoration: const BoxDecoration(),
               child: ListView.builder(
@@ -115,28 +121,10 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
                 shrinkWrap: true,
                 itemCount: filteredData.length,
                 itemBuilder: (context, index) {
-                  final isHovered = _hoveredIndex == index;
-                  return Container(
-                    color: isHovered
-                        ? Theme.of(context).highlightColor
-                        : Colors.transparent,
-                    child: ListTile(
-                      enabled: filteredData[index].value != -1,
-                      title: Text(
-                        filteredData[index].label,
-                        style: widget.textStyle ??
-                            TextStyle(
-                                color: widget.value != null &&
-                                        widget.value ==
-                                            filteredData[index].value
-                                    ? Colors.blue
-                                    : Colors.black),
-                      ),
-                      onTap: () {
-                        _onTapTile(filteredData[index]);
-                      },
-                    ),
-                  );
+                  final isHovered =
+                      _hoveredIndex == index; // Check if the item is hovered
+                  return _buildMenuItem(
+                      index, isHovered); // Build each menu item
                 },
               ),
             ),
@@ -146,6 +134,32 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     );
   }
 
+  // Builds each menu item in the dropdown
+  Widget _buildMenuItem(int index, bool isHovered) {
+    return Container(
+      color: isHovered
+          ? Theme.of(context).highlightColor
+          : Colors.transparent, // Highlight hovered item
+      child: ListTile(
+        enabled: filteredData[index].value != -1, // Disable if value is -1
+        title: Text(
+          filteredData[index].label, // Display the item label
+          style: widget.textStyle ??
+              TextStyle(
+                  color: widget.value != null &&
+                          widget.value == filteredData[index].value
+                      ? Colors.blue // Highlight the selected item
+                      : Colors.black),
+        ),
+        onTap: () {
+          _onTapTile(filteredData[index]); // Handle item tap
+        },
+      ),
+    );
+  }
+
+  /// This function sets the inital value on first initialization and
+  /// OnTap outside of the textfield so that text not selected are removed to default.
   void _setInitialValue() {
     if (widget.value != null) {
       final selectedItem = _getSelectedItem();
@@ -160,6 +174,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     }
   }
 
+  /// Helper method to get the selected item based on the current value
   SearchableDropDownItem? _getSelectedItem() {
     final selectedIndex = widget.menuList.indexWhere(
       (element) => element.value == widget.value,
@@ -170,6 +185,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return null;
   }
 
+  /// Filters the menu items based on the query entered by the user
   void _filterItems(String query) {
     setState(() {
       filteredData = widget.menuList
@@ -181,41 +197,48 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           SearchableDropDownItem(label: "no data available.", value: -1)
         ];
       }
-      _hoveredIndex = 0;
-      _showOverlay();
+      _hoveredIndex = 0; // Reset hovered index to the first item
+      _showOverlay(); // Show the overlay with filtered items
     });
   }
 
+  // Handles keyboard events like arrow up, arrow down, and enter keys
   void _handleKey(KeyEvent event) {
-    if (_overlayEntry == null) return;
+    if (_overlayEntry == null) {
+      return; // No overlay to handle keys if it's not present
+    }
 
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
         setState(() {
-          _hoveredIndex = (_hoveredIndex + 1) % filteredData.length;
+          _hoveredIndex = (_hoveredIndex + 1) %
+              filteredData.length; // Move to the next item
         });
-        _showOverlay();
+        _showOverlay(); // Update the overlay
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         setState(() {
-          _hoveredIndex =
-              (_hoveredIndex - 1 + filteredData.length) % filteredData.length;
+          _hoveredIndex = (_hoveredIndex - 1 + filteredData.length) %
+              filteredData.length; // Move to the previous item
         });
-        _showOverlay();
+        _showOverlay(); // Update the overlay
       } else if (event.logicalKey == LogicalKeyboardKey.enter) {
         if (filteredData.isNotEmpty) {
-          final selected = filteredData[_hoveredIndex];
-          _onTapTile(selected);
+          final selected =
+              filteredData[_hoveredIndex]; // Get the currently hovered item
+          _onTapTile(selected); // Select the hovered item
         }
       }
     }
   }
 
+  // Handles the tap on a menu item and updates the selected value
   void _onTapTile(SearchableDropDownItem item) {
     if (item.value != -1) {
-      widget.onSelected(item);
-      _textController.text = item.label;
-      _removeOverlay();
-      FocusManager.instance.primaryFocus?.unfocus();
+      widget.onSelected(item); // Call the onSelected callback
+      _textController.text =
+          item.label; // Set the selected item label in the text field
+      _removeOverlay(); // Remove the overlay
+      FocusManager.instance.primaryFocus?.unfocus(); // Unfocus the text field
     }
   }
 
