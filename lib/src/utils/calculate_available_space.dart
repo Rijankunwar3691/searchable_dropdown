@@ -41,7 +41,7 @@ Offset calculateAvailableSpace({
   final newOffset = (spaceBelow >= menuHeight)
       ? Offset(0, size.height + 5) // Position below if space is available
       : Offset(
-          0, -(menuHeight + 5)); // Position above if not enough space below
+          0, -(menuHeight + 15)); // Position above if not enough space below
 
   return newOffset;
 }

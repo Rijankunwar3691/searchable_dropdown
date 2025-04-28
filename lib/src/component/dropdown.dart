@@ -195,8 +195,10 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
     var offset = renderBox.localToGlobal(Offset.zero);
-
-    final menuMaxHeight = widget.menuMaxHeight;
+    final approxMenuHeight = filteredData.length * tileHeight;
+    final menuMaxHeight = approxMenuHeight < widget.menuMaxHeight
+        ? approxMenuHeight
+        : widget.menuMaxHeight;
 
     final requiredOffset = calculateAvailableSpace(
         menuAlignment: widget.menuAlignment,
