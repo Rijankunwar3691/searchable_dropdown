@@ -15,10 +15,18 @@ class SearchableDropDown extends StatefulWidget {
     this.contentPadding,
     this.hintText = '',
     this.label,
-    this.textStyle,
+    this.menuTextStyle,
     this.onSearch,
     this.itemBuilder,
     this.hoverColor,
+    this.validator,
+    this.errorStyle,
+    this.textStyle,
+    this.autovalidateMode,
+    this.enabled,
+    this.maxLines,
+    this.decoration,
+    this.expands = false,
   });
 
   final double? menuMaxHeight;
@@ -31,10 +39,18 @@ class SearchableDropDown extends StatefulWidget {
   final EdgeInsetsGeometry? contentPadding;
   final String hintText;
   final Widget? label;
-  final TextStyle? textStyle;
+  final TextStyle? menuTextStyle;
   final ValueChanged<String>? onSearch;
   final Widget? Function(BuildContext, int)? itemBuilder;
   final Color? hoverColor;
+  final String? Function(String?)? validator;
+  final TextStyle? errorStyle;
+  final TextStyle? textStyle;
+  final AutovalidateMode? autovalidateMode;
+  final bool? enabled;
+  final int? maxLines;
+  final InputDecoration? decoration;
+  final bool expands;
 
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
@@ -144,7 +160,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         enabled: filteredData[index].value != -1, // Disable if value is -1
         title: Text(
           filteredData[index].label, // Display the item label
-          style: widget.textStyle ??
+          style: widget.menuTextStyle ??
               TextStyle(
                   color: widget.value != null &&
                           widget.value == filteredData[index].value
@@ -249,14 +265,30 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       child: KeyboardListener(
         focusNode: FocusNode(), // New focus node for keyboard events
         onKeyEvent: _handleKey,
-        child: TextField(
-          onTapOutside: (event) {
-            _setInitialValue();
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
-          controller: _textController,
-          focusNode: _focusNode,
-          decoration: InputDecoration(
+        child: _buildTextField(context),
+      ),
+    );
+  }
+
+  TextFormField _buildTextField(BuildContext context) {
+    return TextFormField(
+      textAlign: TextAlign.start,
+      expands: widget.expands,
+      maxLines: widget.maxLines,
+      enabled: widget.enabled,
+      autovalidateMode: widget.autovalidateMode,
+      style: widget.textStyle,
+      validator: widget.validator,
+      onTapOutside: (event) {
+        _setInitialValue();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      controller: _textController,
+      focusNode: _focusNode,
+      decoration: widget.decoration ??
+          InputDecoration(
+            isDense: true,
+            errorStyle: widget.errorStyle,
             contentPadding: widget.contentPadding,
             border: const OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
@@ -294,18 +326,14 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
               ],
             ),
           ),
-          onTap: () {
-            filteredData = widget.menuList;
-            _hoveredIndex = 0;
-            _showOverlay();
-          },
-          onChanged: (value) {
-            widget.onSearch != null
-                ? widget.onSearch!(value)
-                : _filterItems(value);
-          },
-        ),
-      ),
+      onTap: () {
+        filteredData = widget.menuList;
+        _hoveredIndex = 0;
+        _showOverlay();
+      },
+      onChanged: (value) {
+        widget.onSearch != null ? widget.onSearch!(value) : _filterItems(value);
+      },
     );
   }
 }
