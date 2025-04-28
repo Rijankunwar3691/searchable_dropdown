@@ -3,7 +3,29 @@ import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// A customizable dropdown widget with search functionality.
+///
+/// Displays a list of [SearchableDropDownItem] and allows the user to type to filter the list.
+/// When an item is selected, [onSelected] callback is triggered.
 class SearchableDropDown extends StatefulWidget {
+  /// Creates a [SearchableDropDown] with the provided parameters.
+  ///
+  /// The [menuList], [onSelected], and [value] parameters are required.
+  /// [menuMaxHeight] sets the maximum height of the dropdown menu.
+  /// [onTapCancel] is called when the user taps the cancel/clear icon.
+  /// [menuShape] defines the shape of the dropdown menu, and [menuColor] its background color.
+  /// [contentPadding], [hintText], [label], [menuTextStyle], [textStyle], and [errorStyle]
+  /// control the appearance of the input field and menu items.
+  /// [onSearch] is a callback invoked when the search query changes.
+  /// [itemBuilder] can be used to provide a custom builder for menu items.
+  /// [hoverColor] specifies the color used on hover (if supported).
+  /// [validator] validates the input text, and [autovalidateMode] controls when to validate.
+  /// [enabled] toggles whether the dropdown is interactive.
+  /// [maxLines] sets the maximum lines for the input field.
+  /// [decoration] allows a custom [InputDecoration] for the text field.
+  /// [expands] makes the field expand to fill its parent.
+  /// [selectedColor] is the color used for selected item text in the menu.
+  /// [menuAlignment] controls the alignment of the dropdown menu relative to the input field.
   const SearchableDropDown({
     super.key,
     this.menuMaxHeight,
@@ -32,29 +54,81 @@ class SearchableDropDown extends StatefulWidget {
     this.menuAlignment,
   });
 
+  /// The maximum height of the dropdown menu.
+  /// If null, height is determined by content.
   final double? menuMaxHeight;
+
+  /// List of items to display in the dropdown.
   final List<SearchableDropDownItem> menuList;
+
+  /// Callback triggered when an item is selected.
+  /// Provides the selected [SearchableDropDownItem].
   final ValueChanged<SearchableDropDownItem> onSelected;
+
+  /// The currently selected value.
+  /// This should correspond to one of the values in [menuList].
   final dynamic value;
+
+  /// Callback when the user taps the cancel/clear icon.
   final VoidCallback? onTapCancel;
+
+  /// Shape of the dropdown menu (e.g., rounded corners).
   final ShapeBorder? menuShape;
+
+  /// Background color of the dropdown menu.
   final Color? menuColor;
+
+  /// Padding inside the input field.
   final EdgeInsetsGeometry? contentPadding;
+
+  /// Hint text displayed in the input field when empty.
   final String hintText;
+
+  /// A widget to display as a label for the input field.
   final Widget? label;
+
+  /// Text style for items in the dropdown menu.
   final TextStyle? menuTextStyle;
+
+  /// Callback when the search text changes.
+  /// If provided, this is called with the current search query.
   final ValueChanged<String>? onSearch;
+
+  /// Custom builder for rendering dropdown items.
+  /// Receives the context and item index.
   final Widget? Function(BuildContext, int)? itemBuilder;
+
+  /// Color used to indicate an item is hovered (currently not applied).
   final Color? hoverColor;
+
+  /// Function to validate the input text.
   final String? Function(String?)? validator;
+
+  /// Text style for displaying validation error messages.
   final TextStyle? errorStyle;
+
+  /// Text style for the text input field.
   final TextStyle? textStyle;
+
+  /// Controls when validation is triggered.
   final AutovalidateMode? autovalidateMode;
+
+  /// Whether the dropdown (input field) is enabled.
   final bool? enabled;
+
+  /// Maximum lines of the input field.
   final int? maxLines;
+
+  /// Custom decoration for the input field.
   final InputDecoration? decoration;
+
+  /// If true, the input field expands to fill available space.
   final bool expands;
+
+  /// Color used for the selected item text in the menu.
   final Color selectedColor;
+
+  /// Alignment of the dropdown menu relative to the input field.
   final MenuAlignment? menuAlignment;
 
   @override
@@ -87,8 +161,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     super.dispose();
   }
 
-  /// Listener that removes the overlay when focus is lost
-  ///  Delay added so that the onTap function of tile can be called.
+  /// Listens for focus changes.
+  /// Hides the dropdown overlay when the input field loses focus.
   void onFocusChange() {
     if (!_focusNode.hasFocus) {
       Future.delayed(const Duration(milliseconds: 220), () {
@@ -113,6 +187,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _overlayEntry = null; // Clear the overlay entry reference
   }
 
+  /// Creates the overlay entry widget that displays the dropdown menu.
+  /// Positions and sizes the menu based on available space.
   void _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
@@ -164,7 +240,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     );
   }
 
-  // Builds each menu item in the dropdown
+  /// Builds a single menu item widget for the dropdown.
+  /// Displays [filteredData[index].label] and highlights if hovered.
   Widget _buildMenuItem(int index, bool isHovered) {
     TextStyle textStyle = widget.menuTextStyle?.copyWith(
           color:
@@ -200,7 +277,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     );
   }
 
-  /// This function sets the inital value on first initialization and
+  /// Sets the initial text in the field based on the current [widget.value].
   /// OnTap outside of the textfield so that text not selected are removed to default.
   void _setInitialValue() {
     if (widget.value != null) {
@@ -216,7 +293,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     }
   }
 
-  /// Helper method to get the selected item based on the current value
+  /// Returns the [SearchableDropDownItem] from [menuList] that matches [widget.value].
+  /// Returns null if no match is found.
   SearchableDropDownItem? _getSelectedItem() {
     final selectedIndex = widget.menuList.indexWhere(
       (element) => element.value == widget.value,
@@ -227,7 +305,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return null;
   }
 
-  /// Filters the menu items based on the query entered by the user
+  /// Filters [menuList] items based on [query], updating [filteredData].
+  /// If no items match, shows a "no data available" item.
   void _filterItems(String query) {
     setState(() {
       filteredData = widget.menuList
@@ -273,7 +352,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     }
   }
 
-  // Handles the tap on a menu item and updates the selected value
+  /// Called when a menu item is tapped.
+  /// Selects the item, calls [onSelected], updates text, and closes the overlay.
   void _onTapTile(SearchableDropDownItem item) {
     if (item.value != -1) {
       widget.onSelected(item); // Call the onSelected callback

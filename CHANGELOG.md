@@ -4,7 +4,7 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
-### [0.0.4] - 2025-04-28
+### [0.0.5] - 2025-04-28
 - `menuTextStyle` bug fix.
 
 ### [0.0.4] - 2025-04-28
