@@ -409,7 +409,32 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       },
       controller: _textController,
       focusNode: _focusNode,
-      decoration: widget.decoration ??
+      decoration: widget.decoration?.copyWith(
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.value != null)
+                  InkWell(
+                    onTap: () {
+                      widget.onTapCancel?.call();
+                      _textController.clear();
+                      setState(() {
+                        filteredData = widget.menuList;
+                      });
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      size: 19,
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.expand_more,
+                  size: 24,
+                ),
+              ],
+            ),
+          ) ??
           InputDecoration(
             isDense: true,
             errorStyle: widget.errorStyle,
