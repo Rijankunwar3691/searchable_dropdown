@@ -4,7 +4,7 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
-### [0.0.6] - 2025-04-28
+### [1.0.0] - 2025-04-28
 - `onTapCancel` bug fix.
 
 ### [0.0.5] - 2025-04-28
