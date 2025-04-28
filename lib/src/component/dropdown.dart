@@ -28,7 +28,7 @@ class SearchableDropDown extends StatefulWidget {
   /// [menuAlignment] controls the alignment of the dropdown menu relative to the input field.
   const SearchableDropDown({
     super.key,
-    this.menuMaxHeight,
+    this.menuMaxHeight = 200,
     required this.menuList,
     required this.onSelected,
     required this.value,
@@ -56,7 +56,7 @@ class SearchableDropDown extends StatefulWidget {
 
   /// The maximum height of the dropdown menu.
   /// If null, height is determined by content.
-  final double? menuMaxHeight;
+  final double menuMaxHeight;
 
   /// List of items to display in the dropdown.
   final List<SearchableDropDownItem> menuList;
@@ -196,8 +196,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     var size = renderBox.size;
     var offset = renderBox.localToGlobal(Offset.zero);
 
-    final menuMaxHeight =
-        widget.menuMaxHeight ?? (filteredData.length * tileHeight);
+    final menuMaxHeight = widget.menuMaxHeight;
 
     final requiredOffset = calculateAvailableSpace(
         menuAlignment: widget.menuAlignment,
@@ -207,7 +206,6 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         menuHeight: menuMaxHeight);
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        height: widget.menuMaxHeight,
         width: size.width,
         left: offset.dx,
         child: CompositedTransformFollower(
@@ -224,17 +222,21 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
                 widget.menuColor, // Set the background color for the dropdown
             child: Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                shrinkWrap: true,
-                itemCount: filteredData.length,
-                itemBuilder: (context, index) {
-                  final isHovered =
-                      _hoveredIndex == index; // Check if the item is hovered
-                  return _buildMenuItem(
-                      index, isHovered); // Build each menu item
-                },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: widget.menuMaxHeight),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  shrinkWrap: true,
+                  itemCount: filteredData.length,
+                  itemBuilder: (context, index) {
+                    final isHovered =
+                        _hoveredIndex == index; // Check if the item is hovered
+                    return _buildMenuItem(
+                        index, isHovered); // Build each menu item
+                  },
+                ),
               ),
             ),
           ),
