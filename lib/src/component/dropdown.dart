@@ -27,6 +27,7 @@ class SearchableDropDown extends StatefulWidget {
     this.maxLines,
     this.decoration,
     this.expands = false,
+    this.selectedColor = Colors.blue,
   });
 
   final double? menuMaxHeight;
@@ -51,6 +52,7 @@ class SearchableDropDown extends StatefulWidget {
   final int? maxLines;
   final InputDecoration? decoration;
   final bool expands;
+  final Color selectedColor;
 
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
@@ -131,9 +133,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
             color:
                 widget.menuColor, // Set the background color for the dropdown
             child: Container(
-              decoration: const BoxDecoration(),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
               child: ListView.builder(
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 shrinkWrap: true,
                 itemCount: filteredData.length,
                 itemBuilder: (context, index) {
@@ -160,12 +162,13 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         enabled: filteredData[index].value != -1, // Disable if value is -1
         title: Text(
           filteredData[index].label, // Display the item label
-          style: widget.menuTextStyle ??
-              TextStyle(
-                  color: widget.value != null &&
-                          widget.value == filteredData[index].value
-                      ? Colors.blue // Highlight the selected item
-                      : Colors.black),
+          style: widget.menuTextStyle?.copyWith(
+            color: widget.value != null &&
+                    widget.value == filteredData[index].value
+                ? widget.selectedColor // Use selectedColor if set
+                : widget.textStyle?.color ??
+                    Colors.black, // Default to black if no color set) ??
+          ),
         ),
         onTap: () {
           _onTapTile(filteredData[index]); // Handle item tap
