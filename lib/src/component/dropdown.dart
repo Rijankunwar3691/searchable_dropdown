@@ -410,30 +410,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       controller: _textController,
       focusNode: _focusNode,
       decoration: widget.decoration?.copyWith(
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.value != null)
-                  InkWell(
-                    onTap: () {
-                      widget.onTapCancel?.call();
-                      _textController.clear();
-                      setState(() {
-                        filteredData = widget.menuList;
-                      });
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      size: 19,
-                    ),
-                  ),
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.expand_more,
-                  size: 24,
-                ),
-              ],
-            ),
+            suffixIcon: _suffixIcon(),
           ) ??
           InputDecoration(
             isDense: true,
@@ -450,30 +427,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
             ),
             hintText: widget.hintText,
             label: widget.label,
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.value != null)
-                  InkWell(
-                    onTap: () {
-                      widget.onTapCancel?.call();
-                      _textController.clear();
-                      setState(() {
-                        filteredData = widget.menuList;
-                      });
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      size: 19,
-                    ),
-                  ),
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.expand_more,
-                  size: 24,
-                ),
-              ],
-            ),
+            suffixIcon: _suffixIcon(),
           ),
       onTap: () {
         filteredData = widget.menuList;
@@ -483,6 +437,34 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       onChanged: (value) {
         widget.onSearch != null ? widget.onSearch!(value) : _filterItems(value);
       },
+    );
+  }
+
+  Row _suffixIcon() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.value != null)
+          InkWell(
+            onTap: () {
+              widget.onTapCancel?.call();
+              _textController.clear();
+              setState(() {
+                filteredData = widget.menuList;
+              });
+            },
+            child: const Icon(
+              Icons.close,
+              size: 19,
+            ),
+          ),
+        const SizedBox(width: 12),
+        const Icon(
+          Icons.expand_more,
+          size: 24,
+        ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 }
