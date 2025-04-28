@@ -70,6 +70,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   final _textController = TextEditingController();
   int _hoveredIndex = 0;
 
+  final double tileHeight = 42;
   @override
   void initState() {
     _focusNode.addListener(onFocusChange);
@@ -118,7 +119,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     var size = renderBox.size;
     var offset = renderBox.localToGlobal(Offset.zero);
 
-    final menuMaxHeight = widget.menuMaxHeight ?? (filteredData.length * 42);
+    final menuMaxHeight =
+        widget.menuMaxHeight ?? (filteredData.length * tileHeight);
 
     final requiredOffset = calculateAvailableSpace(
         menuAlignment: widget.menuAlignment,
