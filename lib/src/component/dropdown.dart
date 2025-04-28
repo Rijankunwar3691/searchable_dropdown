@@ -47,7 +47,7 @@ class SearchableDropDown extends StatefulWidget {
     this.textStyle,
     this.autovalidateMode,
     this.enabled,
-    this.maxLines,
+    this.maxLines = 1,
     this.decoration,
     this.expands = false,
     this.selectedColor = Colors.blue,
@@ -143,7 +143,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   final _textController = TextEditingController();
   int _hoveredIndex = 0;
 
-  final double tileHeight = 42;
+  final double tileHeight = 40;
+  final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     _focusNode.addListener(onFocusChange);
@@ -158,6 +159,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _focusNode.dispose();
     _textController.dispose();
     _overlayEntry?.remove();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -223,6 +225,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
             child: Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
               child: ListView.builder(
+                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 shrinkWrap: true,
                 itemCount: filteredData.length,
@@ -262,7 +265,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           ? Theme.of(context).highlightColor
           : Colors.transparent, // Highlight hovered item
       child: SizedBox(
-        height: 40,
+        height: tileHeight,
         child: ListTile(
           enabled: filteredData[index].value != -1, // Disable if value is -1
           title: Text(
@@ -335,13 +338,15 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           _hoveredIndex = (_hoveredIndex + 1) %
               filteredData.length; // Move to the next item
         });
-        _showOverlay(); // Update the overlay
+        _scrollToHoveredItem();
+        _overlayEntry?.markNeedsBuild();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         setState(() {
           _hoveredIndex = (_hoveredIndex - 1 + filteredData.length) %
               filteredData.length; // Move to the previous item
         });
-        _showOverlay(); // Update the overlay
+        _scrollToHoveredItem();
+        _overlayEntry?.markNeedsBuild();
       } else if (event.logicalKey == LogicalKeyboardKey.enter) {
         if (filteredData.isNotEmpty) {
           final selected =
@@ -362,6 +367,17 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       _removeOverlay(); // Remove the overlay
       FocusManager.instance.primaryFocus?.unfocus(); // Unfocus the text field
     }
+  }
+
+  void _scrollToHoveredItem() {
+    final targetOffset = _hoveredIndex * tileHeight;
+
+    // Animate to the item
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 50),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
