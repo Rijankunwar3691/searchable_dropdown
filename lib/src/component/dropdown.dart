@@ -412,13 +412,13 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
               children: [
                 if (widget.value != null)
                   InkWell(
-                    onTap: widget.onTapCancel ??
-                        () {
-                          _textController.clear();
-                          setState(() {
-                            filteredData = widget.menuList;
-                          });
-                        },
+                    onTap: () {
+                      widget.onTapCancel?.call();
+                      _textController.clear();
+                      setState(() {
+                        filteredData = widget.menuList;
+                      });
+                    },
                     child: const Icon(
                       Icons.close,
                       size: 19,
