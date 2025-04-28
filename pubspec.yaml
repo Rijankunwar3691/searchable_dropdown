@@ -1,7 +1,8 @@
 name: advanced_searchable_dropdown
 description: "A customizable Flutter dropdown widget with search functionality, allowing users to filter and quickly select items from long lists, enhancing user experience and usability."
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/Rijankunwar3691/searchable_dropdown
+
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
@@ -23,9 +24,8 @@ dev_dependencies:
 flutter:
 
   # To add assets to your package, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/dropdown.png
   #
   # For details regarding assets in packages, see
   # https://flutter.dev/assets-and-images/#from-packages

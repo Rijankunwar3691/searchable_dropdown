@@ -3,6 +3,8 @@ Here’s a suggested changelog for your package:
 ---
 
 ## Changelog
+### [1.0.1] - 2025-04-28
+- screenshot added.
 
 ### [1.0.0] - 2025-04-28
 - `onTapCancel` bug fix.
