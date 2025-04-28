@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.0.4] - 2025-04-28
+- minor fixes.
+
 ### [1.0.3] - 2025-04-28
 - suffix copied in input decoration.
 
