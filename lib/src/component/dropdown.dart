@@ -387,8 +387,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       _textController.text =
           item.label; // Set the selected item label in the text field
       _removeOverlay(); // Remove the overlay
-      FocusManager.instance.primaryFocus?.unfocus(); // Unfocus the text field
+      //  FocusManager.instance.primaryFocus?.unfocus(); // Unfocus the text field
     }
+    Future.delayed(const Duration(milliseconds: 800), () {
+      _didSelectItem = false; // <-- Reset after short time
+    });
   }
 
   void _scrollToHoveredItem() {
@@ -429,7 +432,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         style: widget.textStyle,
         validator: widget.validator,
         onTapOutside: (event) {
-          FocusManager.instance.primaryFocus?.unfocus();
+          if (_overlayEntry == null) {
+            FocusManager.instance.primaryFocus?.unfocus();
+          }
         },
         controller: _textController,
         focusNode: _focusNode,
@@ -460,7 +465,6 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         onTap: () {
           filteredData = widget.menuList;
           _hoveredIndex = 0;
-          _didSelectItem = false;
           _showOverlay();
         },
         onChanged: (value) {
