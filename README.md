@@ -24,7 +24,7 @@ Add `advanced_searchable_dropdown` as a dependency in your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  advanced_searchable_dropdown: ^1.0.8
+  advanced_searchable_dropdown: ^1.0.9
 ```
 
 Then run the following command to install the package:

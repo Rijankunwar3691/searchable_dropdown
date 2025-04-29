@@ -53,6 +53,7 @@ class SearchableDropDown extends StatefulWidget {
     this.selectedColor = Colors.blue,
     this.menuAlignment,
     this.autoFocus,
+    this.textController,
   });
 
   /// The maximum height of the dropdown menu.
@@ -135,6 +136,9 @@ class SearchableDropDown extends StatefulWidget {
   /// auto focus for the testfield
   final bool? autoFocus;
 
+  /// Text Controller for the text field
+  final TextEditingController? textController;
+
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
 }
@@ -144,7 +148,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   List<SearchableDropDownItem> filteredData = [];
   final _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
-  final _textController = TextEditingController();
+  late TextEditingController _textController;
   int _hoveredIndex = 0;
 
   final double tileHeight = 40;
@@ -153,6 +157,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
   @override
   void initState() {
+    _textController = widget.textController ?? TextEditingController();
     _focusNode.onKeyEvent = _handleKey;
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
@@ -436,6 +441,13 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         onTapOutside: (event) {
           if (_overlayEntry == null) {
             FocusManager.instance.primaryFocus?.unfocus();
+          } else {
+            Future.delayed(
+              const Duration(milliseconds: 250),
+              () {
+                _removeOverlay();
+              },
+            );
           }
         },
         controller: _textController,

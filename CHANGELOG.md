@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.0.9] - 2025-04-29
+- Text Controller added.
+
 ### [1.0.8] - 2025-04-29
 - Keep focus on textfield on item selection.
 
