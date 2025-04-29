@@ -4,8 +4,11 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.1.2] - 2025-04-29
+- Focus on cancel button on tab key press.
+
 ### [1.1.1] - 2025-04-29
-- onTap Outside added.
+- onTap Outside.
 
 ### [1.1.1] - 2025-04-29
 - Text Controller bug fix.

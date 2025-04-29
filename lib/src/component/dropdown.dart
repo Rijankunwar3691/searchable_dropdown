@@ -522,21 +522,20 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.value != null)
-          InkWell(
-            canRequestFocus: false,
-            onTap: () {
+          IconButton(
+            onPressed: () {
               widget.onTapCancel?.call();
               _textController.clear();
               setState(() {
                 filteredData = widget.menuList;
               });
             },
-            child: const Icon(
+            icon: const Icon(
               Icons.close,
               size: 19,
             ),
           ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         const Icon(
           Icons.expand_more,
           size: 24,
