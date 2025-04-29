@@ -25,7 +25,10 @@ class SearchableDropDown extends StatefulWidget {
   /// [decoration] allows a custom [InputDecoration] for the text field.
   /// [expands] makes the field expand to fill its parent.
   /// [selectedColor] is the color used for selected item text in the menu.
-  /// [menuAlignment] controls the alignment of the dropdown menu relative to the input field.
+  /// [menuAlignment] controls the alignment of the dropdown menu relative to the input field
+  /// [onTap] called on Tap of the textField.
+  /// [onTapOutside] called on Tap Outside of the TextField.
+
   const SearchableDropDown({
     super.key,
     this.menuMaxHeight = 200,
@@ -54,6 +57,8 @@ class SearchableDropDown extends StatefulWidget {
     this.menuAlignment,
     this.autoFocus,
     this.textController,
+    this.onTap,
+    this.onTapOutside,
   });
 
   /// The maximum height of the dropdown menu.
@@ -139,6 +144,12 @@ class SearchableDropDown extends StatefulWidget {
   /// Text Controller for the text field
   final TextEditingController? textController;
 
+  /// Function called onTap on textField
+  final VoidCallback? onTap;
+
+  /// Function called onTapOutside on textField
+  final void Function(PointerDownEvent)? onTapOutside;
+
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
 }
@@ -161,7 +172,15 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _focusNode.onKeyEvent = _handleKey;
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
-
+    _textController.addListener(
+      () {
+        if (_focusNode.hasFocus) {
+          widget.onSearch != null
+              ? widget.onSearch!(_textController.text.trim())
+              : _filterItems(_textController.text.trim());
+        }
+      },
+    );
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setInitialValue(); // Safe to call here
@@ -175,6 +194,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     if (widget.textController == null) {
       _textController.dispose();
     }
+    _textController.removeListener(
+      () {
+        _filterItems(_textController.text.trim());
+      },
+    );
     _overlayEntry?.remove();
     _scrollController.dispose();
     super.dispose();
@@ -443,18 +467,19 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         autovalidateMode: widget.autovalidateMode,
         style: widget.textStyle,
         validator: widget.validator,
-        onTapOutside: (event) {
-          if (_overlayEntry == null) {
-            FocusManager.instance.primaryFocus?.unfocus();
-          } else {
-            Future.delayed(
-              const Duration(milliseconds: 250),
-              () {
-                _removeOverlay();
-              },
-            );
-          }
-        },
+        onTapOutside: widget.onTapOutside ??
+            (event) {
+              if (_overlayEntry == null) {
+                FocusManager.instance.primaryFocus?.unfocus();
+              } else {
+                Future.delayed(
+                  const Duration(milliseconds: 250),
+                  () {
+                    _removeOverlay();
+                  },
+                );
+              }
+            },
         controller: _textController,
         focusNode: _focusNode,
         decoration: widget.decoration?.copyWith(
@@ -485,18 +510,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           filteredData = widget.menuList;
           _hoveredIndex = 0;
           _showOverlay();
+          widget.onTap?.call();
         },
-        onChanged: (value) {
-          if (value != _textController.text.trimLeft()) {
-            _textController.text = value.trim();
-
-            _textController.selection =
-                TextSelection.collapsed(offset: _textController.text.length);
-          }
-          widget.onSearch != null
-              ? widget.onSearch!(value)
-              : _filterItems(value);
-        },
+        onChanged: (value) {},
       ),
     );
   }
