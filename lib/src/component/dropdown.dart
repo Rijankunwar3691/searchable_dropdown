@@ -381,15 +381,17 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   /// Called when a menu item is tapped.
   /// Selects the item, calls [onSelected], updates text, and closes the overlay.
   void _onTapTile(SearchableDropDownItem item) {
+    /// Set menu Item selected to true.
     _didSelectItem = true;
     if (item.value != -1) {
       widget.onSelected(item); // Call the onSelected callback
       _textController.text =
           item.label; // Set the selected item label in the text field
       _removeOverlay(); // Remove the overlay
-      //  FocusManager.instance.primaryFocus?.unfocus(); // Unfocus the text field
     }
-    Future.delayed(const Duration(milliseconds: 800), () {
+
+    /// Set to false after some milliseconds
+    Future.delayed(const Duration(milliseconds: 200), () {
       _didSelectItem = false; // <-- Reset after short time
     });
   }
