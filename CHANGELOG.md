@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.0.7] - 2025-04-28
+- open menu on space key press.
+
 ### [1.0.6] - 2025-04-28
 - auto focus added.
 - Focus on field optimized.

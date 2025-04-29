@@ -1,6 +1,6 @@
 name: advanced_searchable_dropdown
 description: "A customizable Flutter dropdown widget with search functionality, allowing users to filter and quickly select items from long lists, enhancing user experience and usability."
-version: 1.0.6
+version: 1.0.7
 homepage: https://github.com/Rijankunwar3691/searchable_dropdown
 
 

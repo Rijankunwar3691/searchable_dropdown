@@ -36,7 +36,7 @@ class SearchableDropDown extends StatefulWidget {
     this.menuShape,
     this.menuColor = Colors.white,
     this.contentPadding,
-    this.hintText = '',
+    this.hintText,
     this.label,
     this.menuTextStyle,
     this.onSearch,
@@ -83,7 +83,7 @@ class SearchableDropDown extends StatefulWidget {
   final EdgeInsetsGeometry? contentPadding;
 
   /// Hint text displayed in the input field when empty.
-  final String hintText;
+  final String? hintText;
 
   /// A widget to display as a label for the input field.
   final Widget? label;
@@ -149,6 +149,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
   final double tileHeight = 40;
   final ScrollController _scrollController = ScrollController();
+  bool _didSelectItem = false;
+
   @override
   void initState() {
     _focusNode.onKeyEvent = _handleKey;
@@ -177,6 +179,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           _removeOverlay();
         }
       });
+    } else {
+      _textController.clear();
     }
   }
 
@@ -377,6 +381,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   /// Called when a menu item is tapped.
   /// Selects the item, calls [onSelected], updates text, and closes the overlay.
   void _onTapTile(SearchableDropDownItem item) {
+    _didSelectItem = true;
     if (item.value != -1) {
       widget.onSelected(item); // Call the onSelected callback
       _textController.text =
@@ -405,56 +410,71 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     );
   }
 
-  TextFormField _buildTextField(BuildContext context) {
-    return TextFormField(
-      autofocus: widget.autoFocus ?? false,
-      textAlign: TextAlign.start,
-      expands: widget.expands,
-      maxLines: widget.maxLines,
-      enabled: widget.enabled,
-      autovalidateMode: widget.autovalidateMode,
-      style: widget.textStyle,
-      validator: widget.validator,
-      onTapOutside: (event) {
-        _setInitialValue();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      controller: _textController,
-      focusNode: _focusNode,
-      decoration: widget.decoration?.copyWith(
-            suffixIcon: _suffixIcon(),
-          ) ??
-          InputDecoration(
-            isDense: true,
-            errorStyle: widget.errorStyle,
-            contentPadding: widget.contentPadding,
-            border: const OutlineInputBorder(),
-            focusedBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: Theme.of(context).colorScheme.primary),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: Theme.of(context).colorScheme.error),
-            ),
-            hintText: widget.hintText,
-            label: widget.label,
-            suffixIcon: _suffixIcon(),
-          ),
-      onTap: () {
-        filteredData = widget.menuList;
-        _hoveredIndex = 0;
-        _showOverlay();
-      },
-      onChanged: (value) {
-        if (value != _textController.text.trimLeft()) {
-          _textController.text = value.trim();
-
-          _textController.selection =
-              TextSelection.collapsed(offset: _textController.text.length);
+  Widget _buildTextField(BuildContext context) {
+    final selectedItem = _getSelectedItem();
+    return Focus(
+      skipTraversal: true,
+      onFocusChange: (value) {
+        if (!value && !_didSelectItem) {
+          _setInitialValue();
         }
-        widget.onSearch != null ? widget.onSearch!(value) : _filterItems(value);
       },
+      child: TextFormField(
+        autofocus: widget.autoFocus ?? false,
+        textAlign: TextAlign.start,
+        expands: widget.expands,
+        maxLines: widget.maxLines,
+        enabled: widget.enabled,
+        autovalidateMode: widget.autovalidateMode,
+        style: widget.textStyle,
+        validator: widget.validator,
+        onTapOutside: (event) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        controller: _textController,
+        focusNode: _focusNode,
+        decoration: widget.decoration?.copyWith(
+              suffixIcon: _suffixIcon(),
+              hintText:
+                  widget.value != null ? selectedItem?.label : widget.hintText,
+            ) ??
+            InputDecoration(
+              isDense: true,
+              errorStyle: widget.errorStyle,
+              contentPadding: widget.contentPadding,
+              border: const OutlineInputBorder(),
+              focusedBorder: OutlineInputBorder(
+                borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.primary),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.error),
+              ),
+              hintText: widget.value != null
+                  ? _textController.text.trim()
+                  : widget.hintText,
+              label: widget.label,
+              suffixIcon: _suffixIcon(),
+            ),
+        onTap: () {
+          filteredData = widget.menuList;
+          _hoveredIndex = 0;
+          _didSelectItem = false;
+          _showOverlay();
+        },
+        onChanged: (value) {
+          if (value != _textController.text.trimLeft()) {
+            _textController.text = value.trim();
+
+            _textController.selection =
+                TextSelection.collapsed(offset: _textController.text.length);
+          }
+          widget.onSearch != null
+              ? widget.onSearch!(value)
+              : _filterItems(value);
+        },
+      ),
     );
   }
 
@@ -464,6 +484,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       children: [
         if (widget.value != null)
           InkWell(
+            canRequestFocus: false,
             onTap: () {
               widget.onTapCancel?.call();
               _textController.clear();
