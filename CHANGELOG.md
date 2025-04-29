@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.1.0] - 2025-04-29
+- Text Controller bug fix.
+
 ### [1.0.9] - 2025-04-29
 - Text Controller added.
 

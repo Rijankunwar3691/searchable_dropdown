@@ -161,15 +161,20 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _focusNode.onKeyEvent = _handleKey;
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
-    _setInitialValue(); // Set the initial value for the dropdown (if any)
+
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setInitialValue(); // Safe to call here
+    }); // Set the initial value for the dropdown (if any)
   }
 
   @override
   void dispose() {
     _focusNode.removeListener(onFocusChange);
     _focusNode.dispose();
-    _textController.dispose();
+    if (widget.textController == null) {
+      _textController.dispose();
+    }
     _overlayEntry?.remove();
     _scrollController.dispose();
     super.dispose();
