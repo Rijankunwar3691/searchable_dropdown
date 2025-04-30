@@ -4,8 +4,11 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
-### [1.1.2] - 2025-04-29
+### [1.2.0] - 2025-04-30
 - Focus on cancel button on tab key press.
+- Lock TextField Cursor if it contains a selected Item.
+- Open MenuList of space key press on keyboard.
+- Disable Space at start of text.
 
 ### [1.1.1] - 2025-04-29
 - onTap Outside.

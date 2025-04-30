@@ -1,4 +1,5 @@
 import 'package:advanced_searchable_dropdown/advanced_searchable_dropdown.dart';
+import 'package:advanced_searchable_dropdown/src/helper/no_leading_space_text_formatter.dart';
 import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -168,6 +169,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   final double tileHeight = 40;
   final ScrollController _scrollController = ScrollController();
   bool _didSelectItem = false;
+  bool isLocked = false;
 
   @override
   void initState() {
@@ -175,15 +177,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _focusNode.onKeyEvent = _handleKey;
     _focusNode.addListener(onFocusChange);
     filteredData = widget.menuList;
-    _textController.addListener(
-      () {
-        if (_focusNode.hasFocus) {
-          widget.onSearch != null
-              ? widget.onSearch!(_textController.text.trim())
-              : _filterItems(_textController.text.trim());
-        }
-      },
-    );
+    _textController.addListener(_onTextChanged);
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setInitialValue(); // Safe to call here
@@ -208,21 +202,79 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     super.dispose();
   }
 
+  void _onTextChanged() {
+    if (!_focusNode.hasFocus) return;
+
+    /// Value of Text Controller
+    final text = _textController.text;
+
+    /// Search Menu List if Text Changes
+    ///
+    widget.onSearch != null
+        ? widget.onSearch!(isLocked ? '' : text.trim())
+        : _filterItems(isLocked ? '' : text.trim());
+
+    /// Get selected label to check if the newly entered value is different from selected value
+    ///
+    final selectedLabel = _getSelectedItem()?.label;
+
+    /// If is in locked state then move cursor to start
+    ///
+    if (isLocked && text.isNotEmpty) {
+      _setCursorToStart();
+
+      /// If Text is not empty and selected lable is different than user has typed something in start index
+      /// Now replace the Text with new text at start
+      /// Set is Locked to false to allow free movement in textfield
+      if (selectedLabel != text) {
+        // Replace entire text with latest single character (simulate overwrite)
+        _replaceWithFirstCharacter(text);
+        isLocked = false; // Unlock after user enters new text
+      }
+    }
+  }
+
+  /// This function replaces the text controller with new text entered in locked state at start
+  ///
+  void _replaceWithFirstCharacter(String text) {
+    final newText = text.substring(0, 1);
+    if (text != newText) {
+      _textController.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+  }
+
+  /// This function sets the cursor the start position
+  ///
+  void _setCursorToStart() {
+    _textController.selection = const TextSelection.collapsed(offset: 0);
+  }
+
   /// Listens for focus changes.
   /// Hides the dropdown overlay when the input field loses focus.
   void onFocusChange() {
     if (!_focusNode.hasFocus) {
+      /// Delay applied so that the On Tap of List Tile can be called
+      ///
       Future.delayed(const Duration(milliseconds: 220), () {
         if (!_focusNode.hasFocus) {
           _removeOverlay();
         }
       });
     } else {
-      _textController.clear();
+      /// Set is Locked to true and Cursor to start on Focus if it contains a value
+      ///
+      if (widget.value != null) {
+        isLocked = true;
+        _setCursorToStart();
+      }
     }
   }
 
-  // Displays the overlay with the filtered items
+  /// Displays the overlay with the filtered items
+  ///
   void _showOverlay() {
     _overlayEntry?.remove(); // Remove any existing overlay
     _createOverlayEntry(); // Create a new overlay entry
@@ -380,6 +432,10 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   // Handles keyboard events like arrow up, arrow down, and enter keys
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (_overlayEntry == null) {
+      if (event.logicalKey == LogicalKeyboardKey.space) {
+        _showOverlay();
+        return KeyEventResult.handled;
+      }
       return KeyEventResult
           .ignored; // No overlay to handle keys if it's not present
     }
@@ -407,9 +463,6 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
               filteredData[_hoveredIndex]; // Get the currently hovered item
           _onTapTile(selected); // Select the hovered item
           return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.space) {
-          _showOverlay();
-          return KeyEventResult.handled;
         }
       }
     }
@@ -421,6 +474,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   void _onTapTile(SearchableDropDownItem item) {
     /// Set menu Item selected to true.
     _didSelectItem = true;
+    isLocked = false;
     if (item.value != -1) {
       widget.onSelected(item); // Call the onSelected callback
       _textController.text =
@@ -463,6 +517,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         }
       },
       child: TextFormField(
+        inputFormatters: [NoLeadingSpaceFormatter()],
         autofocus: widget.autoFocus ?? false,
         textAlign: TextAlign.start,
         expands: widget.expands,
