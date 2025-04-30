@@ -59,6 +59,7 @@ class SearchableDropDown extends StatefulWidget {
     this.textController,
     this.onTap,
     this.onTapOutside,
+    this.iconSize = 20,
   });
 
   /// The maximum height of the dropdown menu.
@@ -150,6 +151,8 @@ class SearchableDropDown extends StatefulWidget {
   /// Function called onTapOutside on textField
   final void Function(PointerDownEvent)? onTapOutside;
 
+  final double iconSize;
+
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
 }
@@ -200,6 +203,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       },
     );
     _overlayEntry?.remove();
+    _overlayEntry = null;
     _scrollController.dispose();
     super.dispose();
   }
@@ -483,6 +487,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         controller: _textController,
         focusNode: _focusNode,
         decoration: widget.decoration?.copyWith(
+              suffixIconConstraints: const BoxConstraints(maxHeight: 18),
               suffixIcon: _suffixIcon(),
               hintText:
                   widget.value != null ? selectedItem?.label : widget.hintText,
@@ -523,6 +528,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       children: [
         if (widget.value != null)
           IconButton(
+            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
             onPressed: () {
               widget.onTapCancel?.call();
               _textController.clear();
@@ -530,15 +536,15 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
                 filteredData = widget.menuList;
               });
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.close,
-              size: 19,
+              size: widget.iconSize,
             ),
           ),
         const SizedBox(width: 8),
-        const Icon(
+        Icon(
           Icons.expand_more,
-          size: 24,
+          size: widget.iconSize,
         ),
         const SizedBox(width: 4),
       ],
