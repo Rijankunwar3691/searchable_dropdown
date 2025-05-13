@@ -210,9 +210,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
     /// Search Menu List if Text Changes
     ///
-    widget.onSearch != null
-        ? widget.onSearch!(isLocked ? '' : text.trim())
-        : _filterItems(isLocked ? '' : text.trim());
+    if (!isLocked) {
+      widget.onSearch != null
+          ? widget.onSearch!(isLocked ? '' : text.trim())
+          : _filterItems(isLocked ? '' : text.trim());
+    }
 
     /// Get selected label to check if the newly entered value is different from selected value
     ///
