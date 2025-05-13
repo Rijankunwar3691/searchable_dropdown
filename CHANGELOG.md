@@ -4,6 +4,10 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.2.1] - 2025-05-13
+- Scrolling made smoother.
+- Donot open menu on focus.
+
 ### [1.2.0] - 2025-04-30
 - Focus on cancel button on tab key press.
 - Lock TextField Cursor if it contains a selected Item.
