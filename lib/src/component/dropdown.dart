@@ -444,19 +444,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        setState(() {
-          _hoveredIndex = (_hoveredIndex + 1) %
-              filteredData.length; // Move to the next item
-        });
-        _scrollToHoveredItem();
+        _moveToNextItem();
         _overlayEntry?.markNeedsBuild();
         return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        setState(() {
-          _hoveredIndex = (_hoveredIndex - 1 + filteredData.length) %
-              filteredData.length; // Move to the previous item
-        });
-        _scrollToHoveredItem();
+        _moveToPreviousItem();
         _overlayEntry?.markNeedsBuild();
         return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.enter) {
@@ -469,6 +461,44 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       }
     }
     return KeyEventResult.ignored;
+  }
+
+  // Method to move to the next item
+  void _moveToNextItem() {
+    if (_hoveredIndex < filteredData.length - 1) {
+      _hoveredIndex++;
+    }
+    _scrollToItem(_hoveredIndex);
+  }
+
+  // Method to move to the previous item
+  void _moveToPreviousItem() {
+    if (_hoveredIndex > 0) {
+      _hoveredIndex--;
+    }
+    _scrollToItem(_hoveredIndex);
+  }
+
+  void _scrollToItem(int index) {
+    final itemHeight = tileHeight; // Height of each item
+    final targetOffset = itemHeight * index;
+
+    // Check the current scroll position and the viewport height
+    final scrollPosition = _scrollController.position.pixels;
+    final viewportHeight = _scrollController.position.viewportDimension;
+
+    // Scroll up or down based on where the item is relative to the viewport
+    if (targetOffset < scrollPosition) {
+      // Item is above the current view, scroll upwards
+      _scrollController.animateTo(targetOffset,
+          duration: const Duration(milliseconds: 150), curve: Curves.easeInOut);
+    } else if (targetOffset + itemHeight > scrollPosition + viewportHeight) {
+      // Item is below the current view, scroll downwards
+      _scrollController.animateTo(
+          targetOffset - viewportHeight + itemHeight + 10,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut);
+    }
   }
 
   /// Called when a menu item is tapped.
@@ -488,17 +518,6 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     Future.delayed(const Duration(milliseconds: 200), () {
       _didSelectItem = false; // <-- Reset after short time
     });
-  }
-
-  void _scrollToHoveredItem() {
-    final targetOffset = _hoveredIndex * tileHeight;
-
-    // Animate to the item
-    _scrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 50),
-      curve: Curves.easeInOut,
-    );
   }
 
   @override
