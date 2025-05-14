@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.2.2] - 2025-05-14
+- show or hide cancel button flag added.
+
 ### [1.2.1] - 2025-05-13
 - Scrolling made smoother.
 - Donot open menu on focus.

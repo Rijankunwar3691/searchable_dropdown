@@ -61,6 +61,7 @@ class SearchableDropDown extends StatefulWidget {
     this.onTap,
     this.onTapOutside,
     this.iconSize = 20,
+    this.showCancelButton = true,
   });
 
   /// The maximum height of the dropdown menu.
@@ -153,6 +154,9 @@ class SearchableDropDown extends StatefulWidget {
   final void Function(PointerDownEvent)? onTapOutside;
 
   final double iconSize;
+
+  /// This controls weather to show or hide cancel button
+  final bool showCancelButton;
 
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
@@ -602,7 +606,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.value != null)
+        if (widget.value != null && widget.showCancelButton)
           IconButton(
             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
             onPressed: () {
