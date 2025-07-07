@@ -189,6 +189,15 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   }
 
   @override
+  void didUpdateWidget(covariant SearchableDropDown oldWidget) {
+    if (oldWidget.value != null && widget.value == null) {
+      _textController.clear();
+    }
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void dispose() {
     _focusNode.removeListener(onFocusChange);
     _focusNode.dispose();
