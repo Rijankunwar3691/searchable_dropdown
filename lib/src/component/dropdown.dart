@@ -190,8 +190,8 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
   @override
   void didUpdateWidget(covariant SearchableDropDown oldWidget) {
-    if (oldWidget.value != null && widget.value == null) {
-      _textController.clear();
+    if (oldWidget.value != widget.value) {
+      _setInitialValue();
     }
 
     super.didUpdateWidget(oldWidget);
@@ -274,9 +274,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       /// Delay applied so that the On Tap of List Tile can be called
       ///
       Future.delayed(const Duration(milliseconds: 220), () {
-        if (!_focusNode.hasFocus) {
-          _removeOverlay();
-        }
+        _removeOverlay();
       });
     } else {
       /// Set is Locked to true and Cursor to start on Focus if it contains a value

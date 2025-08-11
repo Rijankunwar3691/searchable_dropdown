@@ -4,6 +4,9 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [1.2.4] - 2025-08-11
+- Set value on didupdate widget.
+
 ### [1.2.3] - 2025-07-07
 - Clear controllers when no value.
 
