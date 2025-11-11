@@ -511,6 +511,12 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         },
         onChanged: _onTextChanged,
       ),
+
+      onClose: () {
+        if(!_justSelected){
+          _setInitialValue();
+        }
+      },
     );
   }
 
@@ -518,7 +524,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.value != null && widget.showCancelButton)
+        if (widget.value != null && widget.showCancelButton && widget.value!=0)
           IconButton(
             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
             onPressed: () {
