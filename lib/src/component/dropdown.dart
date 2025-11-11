@@ -188,11 +188,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
 
   @override
   void didUpdateWidget(covariant SearchableDropDown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
     if (oldWidget.value != widget.value) {
       _setInitialValue();
     }
-
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -271,20 +271,30 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   /// Sets the initial text in the field based on the current [widget.value].
   /// OnTap outside of the textfield so that text not selected are removed to default.
   void _setInitialValue() {
-    if (widget.value != null) {
-      final selectedItem = _getSelectedItem();
-      if (selectedItem != null) {
-        _justSelected = true;
-        _textController.value = TextEditingValue(
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      if (widget.value != null) {
+        final selectedItem = _getSelectedItem();
+        if (selectedItem != null) {
+          _justSelected = true;
+          _textController.value = TextEditingValue(
             text: selectedItem.label,
-            selection: const TextSelection.collapsed(offset: 0));
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+        } else {
+          _textController.value = const TextEditingValue(
+            text: '',
+            selection: TextSelection.collapsed(offset: 0),
+          );
+          if (widget.value != 0) {
+            assert(false, "Menu must contain at least one or more value");
+          }
+        }
       } else {
         _textController.clear();
-        assert(false, "Menu must contain at least one or more value");
       }
-    } else {
-      _textController.clear();
-    }
+    });
   }
 
   /// Returns the [SearchableDropDownItem] from [menuList] that matches [widget.value].
@@ -432,8 +442,6 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
   }
 
   Widget _buildTextField(BuildContext context) {
-    final selectedItem = _getSelectedItem();
-
     final menuWidth = getWidth(_anchorKey) ?? _kMenuWidth;
 
     final effectiveMenuStyle = MenuStyle(
@@ -444,7 +452,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         Size(menuWidth, 0.0),
       ),
       maximumSize: WidgetStatePropertyAll<Size?>(
-        Size(double.maxFinite, widget.menuMaxHeight),
+        Size(menuWidth, widget.menuMaxHeight),
       ),
       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
     );
@@ -473,8 +481,7 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         decoration: widget.decoration?.copyWith(
               suffixIconConstraints: const BoxConstraints(maxHeight: 18),
               suffixIcon: _suffixIcon(),
-              hintText:
-                  widget.value != null ? selectedItem?.label : widget.hintText,
+              hintText: widget.hintText,
             ) ??
             InputDecoration(
               isDense: true,
