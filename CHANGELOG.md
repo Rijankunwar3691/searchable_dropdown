@@ -4,6 +4,10 @@ Here’s a suggested changelog for your package:
 
 ## Changelog
 
+### [2.0.0] - 2025-11-11
+- Bug fixes.
+- Refactored the logic and made it more smooth.
+
 ### [1.2.4] - 2025-08-11
 - Set value on didupdate widget.
 
