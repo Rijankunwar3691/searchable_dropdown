@@ -1,5 +1,6 @@
 import 'package:advanced_searchable_dropdown/advanced_searchable_dropdown.dart';
 import 'package:advanced_searchable_dropdown/src/helper/no_leading_space_text_formatter.dart';
+import 'package:advanced_searchable_dropdown/src/utils/calculate_available_space.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -31,7 +32,7 @@ class SearchableDropDown extends StatefulWidget {
 
   const SearchableDropDown({
     super.key,
-    this.menuMaxHeight = 200,
+    this.menuMaxHeight = 300,
     required this.menuList,
     required this.onSelected,
     required this.value,
@@ -61,6 +62,8 @@ class SearchableDropDown extends StatefulWidget {
     this.onTapOutside,
     this.iconSize = 20,
     this.showCancelButton = true,
+    this.controller,
+    this.closeOnSelect,
   });
 
   /// The maximum height of the dropdown menu.
@@ -157,28 +160,45 @@ class SearchableDropDown extends StatefulWidget {
   /// This controls weather to show or hide cancel button
   final bool showCancelButton;
 
+  /// Optional [SearchableDropdownController] to drive the dropdown menu manually.
+  /// When supplied, you can programmatically open/close the menu.
+  final SearchableDropdownController? controller;
+
+  /// Whether the menu should close automatically when an item is picked.
+  /// Defaults to `true` unless a [controller] is provided, in which case the
+  /// caller must opt-in by setting this to `true`.
+  final bool? closeOnSelect;
+
   @override
   State<SearchableDropDown> createState() => _SearchableDropDownState();
 }
 
 class _SearchableDropDownState extends State<SearchableDropDown> {
+  /// Keeps track of the dropdown that currently has its menu open so that
+  /// only one dropdown is open at a time across the app.
+  static _SearchableDropDownState? _currentlyOpenDropdown;
+
   final _focusNode = FocusNode();
   List<SearchableDropDownItem> filteredData = [];
-  final _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+  final OverlayPortalController _portalController = OverlayPortalController();
   late TextEditingController _textController;
   int _hoveredIndex = 0;
 
   final double tileHeight = 40;
   final ScrollController _scrollController = ScrollController();
   bool _justSelected = false;
-  final _menuController = MenuController();
+  late final SearchableDropdownController _internalMenuController =
+      SearchableDropdownController();
+  SearchableDropdownController? _listeningMenuController;
   final GlobalKey _anchorKey = GlobalKey();
 
-  final _kMenuWidth = 112.0;
+  SearchableDropdownController get _menuController =>
+      widget.controller ?? _internalMenuController;
 
   @override
   void initState() {
+    _updateMenuControllerListener();
     _textController = widget.textController ?? TextEditingController();
     _focusNode.onKeyEvent = _handleKey;
     filteredData = widget.menuList;
@@ -186,9 +206,23 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     _setInitialValue();
   }
 
+  void _updateMenuControllerListener() {
+    final controller = _menuController;
+    if (identical(_listeningMenuController, controller)) return;
+
+    _listeningMenuController?.removeListener(_handleMenuControllerChange);
+    _listeningMenuController = controller;
+    controller.addListener(_handleMenuControllerChange);
+    _handleMenuControllerChange();
+  }
+
   @override
   void didUpdateWidget(covariant SearchableDropDown oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.controller != widget.controller) {
+      _updateMenuControllerListener();
+    }
 
     if (oldWidget.value != widget.value) {
       _setInitialValue();
@@ -201,10 +235,78 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     if (widget.textController == null) {
       _textController.dispose();
     }
-    _overlayEntry?.remove();
-    _overlayEntry = null;
     _scrollController.dispose();
+    _listeningMenuController?.removeListener(_handleMenuControllerChange);
     super.dispose();
+  }
+
+  void _handleMenuControllerChange() {
+    if (!mounted) return;
+    final shouldShow = _menuController.isOpen;
+    if (shouldShow) {
+      _registerAsOpenDropdown();
+      if (!_portalController.isShowing) {
+        _portalController.show();
+      }
+    } else if (_portalController.isShowing) {
+      _portalController.hide();
+    }
+    setState(() {});
+  }
+
+  void _registerAsOpenDropdown() {
+    if (identical(_currentlyOpenDropdown, this)) return;
+
+    _currentlyOpenDropdown?._closeMenu();
+    _currentlyOpenDropdown = this;
+  }
+
+  Widget _buildOverlay(BuildContext context) {
+    final renderBox =
+        _anchorKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) {
+      return const SizedBox.shrink();
+    }
+
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final menuOffset = calculateAvailableSpace(
+      offset: offset,
+      size: size,
+      context: context,
+      menuHeight: widget.menuMaxHeight,
+      menuAlignment: widget.menuAlignment,
+    );
+
+    return Positioned(
+      width: size.width,
+      left: offset.dx,
+      child: CompositedTransformFollower(
+        link: _layerLink,
+        showWhenUnlinked: false,
+        offset: menuOffset,
+        child: _buildMenuSurface(size.width),
+      ),
+    );
+  }
+
+  Widget _buildMenuSurface(double width) {
+    return Material(
+      color: widget.menuColor ?? Colors.white,
+      shape: widget.menuShape ??
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+      elevation: 3,
+      clipBehavior: Clip.antiAlias,
+      child: TapRegion(
+        groupId: "dropDown",
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: widget.menuMaxHeight),
+          child: _buildMenuContent(width, widget.menuMaxHeight),
+        ),
+      ),
+    );
   }
 
   void _onTextChanged(String text) {
@@ -231,6 +333,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     }
   }
 
+  bool get _shouldAutoCloseMenu =>
+      widget.closeOnSelect ?? widget.controller == null;
+
   /// Builds a single menu item widget for the dropdown.
   /// Displays [filteredData[index].label] and highlights if hovered.
   Widget _buildMenuItem(int index, bool isHovered) {
@@ -248,13 +353,14 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
                   : widget.textStyle?.color ??
                       Colors.black, // Default to black if no color set
         );
-    return Container(
-      color: isHovered
-          ? Theme.of(context).highlightColor
-          : Colors.transparent, // Highlight hovered item
-      child: SizedBox(
-        height: tileHeight,
+    return MouseRegion(
+      onEnter: (_) => _updateHoveredIndex(index),
+      child: Container(
+        color: isHovered
+            ? widget.hoverColor ?? Theme.of(context).highlightColor
+            : Colors.transparent, // Highlight hovered item
         child: ListTile(
+          minTileHeight: tileHeight,
           enabled: filteredData[index].value != -1, // Disable if value is -1
           title: Text(
             filteredData[index].label, // Display the item label
@@ -265,6 +371,17 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildMenuContent(double menuWidth, double menuHeight) {
+    return ListView.builder(
+      shrinkWrap: true,
+      controller: _scrollController,
+      padding: EdgeInsets.zero,
+      itemCount: filteredData.length,
+      itemBuilder: (context, index) =>
+          _buildMenuItem(index, index == _hoveredIndex),
     );
   }
 
@@ -326,56 +443,116 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     });
   }
 
+  void _updateHoveredIndex(int index) {
+    if (_hoveredIndex == index) return;
+    setState(() {
+      _hoveredIndex = index;
+    });
+  }
+
   // Handles keyboard events like arrow up, arrow down, and enter keys
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
-    if (_overlayEntry == null) {
-      if (event.logicalKey == LogicalKeyboardKey.space) {
-        return KeyEventResult.handled;
-      }
-      return KeyEventResult
-          .ignored; // No overlay to handle keys if it's not present
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
     }
 
-    if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+    final isMenuOpen = _menuController.isOpen;
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (!isMenuOpen) {
+        _openMenu();
+      } else {
         _moveToNextItem();
-        _overlayEntry?.markNeedsBuild();
-        return KeyEventResult.handled;
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (!isMenuOpen) {
+        _openMenu();
+      } else if (_hoveredIndex == 0) {
+        _menuController.close();
+      } else {
         _moveToPreviousItem();
-        _overlayEntry?.markNeedsBuild();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.enter && isMenuOpen) {
+      if (filteredData.isNotEmpty) {
+        final selected = filteredData[_hoveredIndex];
+        _onTapTile(selected); // Select the hovered item
         return KeyEventResult.handled;
-      } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-        if (filteredData.isNotEmpty) {
-          final selected =
-              filteredData[_hoveredIndex]; // Get the currently hovered item
-          _onTapTile(selected); // Select the hovered item
-          return KeyEventResult.handled;
-        }
       }
     }
+
+    if (event.logicalKey == LogicalKeyboardKey.escape && isMenuOpen) {
+      _closeMenu();
+      return KeyEventResult.handled;
+    }
+
+    if (!isMenuOpen && event.logicalKey == LogicalKeyboardKey.space) {
+      _openMenu();
+      return KeyEventResult.handled;
+    }
+
     return KeyEventResult.ignored;
   }
 
   // Method to move to the next item
   void _moveToNextItem() {
-    if (_hoveredIndex < filteredData.length - 1) {
-      _hoveredIndex++;
-    }
+    setState(() {
+      if (_hoveredIndex < filteredData.length - 1) {
+        _hoveredIndex++;
+      }
+    });
     _scrollToItem(_hoveredIndex);
   }
 
   // Method to move to the previous item
   void _moveToPreviousItem() {
-    if (_hoveredIndex > 0) {
-      _hoveredIndex--;
-    }
+    setState(() {
+      if (_hoveredIndex > 0) {
+        _hoveredIndex--;
+      }
+    });
     _scrollToItem(_hoveredIndex);
+  }
+
+  void _openMenu({bool resetFilter = false}) {
+    setState(() {
+      if (resetFilter || filteredData.isEmpty) {
+        filteredData = widget.menuList;
+      }
+
+      if (filteredData.isEmpty) {
+        _hoveredIndex = 0;
+      } else if (resetFilter || _hoveredIndex >= filteredData.length) {
+        _hoveredIndex = 0;
+      }
+    });
+    if (!_menuController.isOpen) {
+      _menuController.open();
+    }
+  }
+
+  void _closeMenu() {
+    if (_menuController.isOpen) {
+      _menuController.close();
+    } else if (_portalController.isShowing) {
+      _portalController.hide();
+    }
+
+    if (identical(_currentlyOpenDropdown, this)) {
+      _currentlyOpenDropdown = null;
+    }
   }
 
   void _scrollToItem(int index) {
     final itemHeight = tileHeight; // Height of each item
     final targetOffset = itemHeight * index;
+
+    if (!_scrollController.hasClients) return;
 
     // Check the current scroll position and the viewport height
     final scrollPosition = _scrollController.position.pixels;
@@ -408,16 +585,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
       widget.onSelected(item);
     }
 
-    _menuController.close();
-  }
-
-  double? getWidth(GlobalKey key) {
-    final BuildContext? context = key.currentContext;
-    if (context != null) {
-      final RenderBox box = context.findRenderObject()! as RenderBox;
-      return box.hasSize ? box.size.width : null;
+    if (_shouldAutoCloseMenu) {
+      _closeMenu();
     }
-    return null;
   }
 
   @override
@@ -425,45 +595,25 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return TapRegion(
       groupId: 'dropDown',
       onTapOutside: (event) {
-        if (_focusNode.hasPrimaryFocus) {
-          return;
-        }
         if (!_justSelected) {
           _setInitialValue();
         }
         widget.onTapOutside?.call(event);
         _justSelected = false;
+
+        _closeMenu();
       },
-      child: CompositedTransformTarget(
-        link: _layerLink,
+      child: OverlayPortal(
+        controller: _portalController,
+        overlayChildBuilder: _buildOverlay,
         child: _buildTextField(context),
       ),
     );
   }
 
   Widget _buildTextField(BuildContext context) {
-    final menuWidth = getWidth(_anchorKey) ?? _kMenuWidth;
-
-    final effectiveMenuStyle = MenuStyle(
-      backgroundColor: WidgetStatePropertyAll(widget.menuColor ?? Colors.white),
-      surfaceTintColor:
-          WidgetStatePropertyAll(widget.menuColor ?? Colors.white),
-      minimumSize: WidgetStatePropertyAll<Size?>(
-        Size(menuWidth, 0.0),
-      ),
-      maximumSize: WidgetStatePropertyAll<Size?>(
-        Size(menuWidth, widget.menuMaxHeight),
-      ),
-      padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-    );
-    return MenuAnchor(
-      crossAxisUnconstrained: false,
-      style: effectiveMenuStyle,
-      controller: _menuController,
-      menuChildren: List.generate(
-        filteredData.length,
-        (index) => _buildMenuItem(index, index == _hoveredIndex),
-      ),
+    return CompositedTransformTarget(
+      link: _layerLink,
       child: TextFormField(
         enableInteractiveSelection: false,
         key: _anchorKey,
@@ -503,20 +653,11 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
         onTap: () {
           _justSelected = true;
           _textController.selection = const TextSelection.collapsed(offset: 0);
-          filteredData = widget.menuList;
-          _hoveredIndex = 0;
-          _menuController.open();
           widget.onTap?.call();
-          setState(() {});
+          _openMenu(resetFilter: true);
         },
         onChanged: _onTextChanged,
       ),
-
-      onClose: () {
-        if(!_justSelected){
-          _setInitialValue();
-        }
-      },
     );
   }
 
@@ -524,7 +665,9 @@ class _SearchableDropDownState extends State<SearchableDropDown> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.value != null && widget.showCancelButton && widget.value!=0)
+        if (widget.value != null &&
+            widget.showCancelButton &&
+            widget.value != 0)
           IconButton(
             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
             onPressed: () {
